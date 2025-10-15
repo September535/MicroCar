@@ -1,7 +1,7 @@
 {
-    "name": "TinkerBott",
+    "name": "MicroCar",
     "version": "2.0.0",
-    "description": "Extension for TinkerBott V2.0",
+    "description": "Extension for MicroCar V2.0",
     "license": "MIT",
     "dependencies": {
         "core": "*",
@@ -10,8 +10,8 @@
     "files": [
         "README.md",
         "main.ts",
-        "_locales/zh-cn/TinkerBott-strings.json",
-        "_locales/zh-tw/TinkerBott-strings.json"
+        "_locales/zh-cn/MicroCar-strings.json",
+        "_locales/zh-tw/MicroCar-strings.json"
     ],
     "testFiles": [
         "test.ts"

@@ -2,7 +2,7 @@
 Shenzhen ACEBOTT Tech
 modified from liusen
 load dependency
-"TinkerBott": "file:../pxt-TinkerBott"
+"MicroCar": "file:../pxt-MicroCar"
 */
 
 const enum IR_Button {
@@ -253,7 +253,7 @@ namespace background {
 
 
 //% color="#6e5ba4" weight=20 icon="icon.png"
-namespace TinkerBott {
+namespace MicroCar {
 
     // IR Receiver @startTime
     let irState: IrState;
