@@ -291,7 +291,6 @@ namespace MicroCar {
         }
     }
 
-
     function appendBitToDatagram(bit: number): number {
         irState.bitsReceived += 1;
 
@@ -556,7 +555,50 @@ namespace MicroCar {
             }
         }
     }
-    
+
+    // LED Sensor @start
+
+    //LED light selection enumeration
+    export enum MyEnumLed {
+        //% block="left led light"
+        LeftLed,
+        //% block="right led light"
+        RightLed,
+        //% block="all led light"
+        AllLed,
+    };
+
+    //LED light switch enumeration selection
+    export enum MyEnumSwitch {
+        //% block="close"
+        Close,
+        //% block="open"
+        Open,
+    };
+
+    const I2CADDR = 0x10;
+    const ADC0_REGISTER = 0X1E;
+    const ADC1_REGISTER = 0X20;
+    const ADC2_REGISTER = 0X22;
+    const ADC3_REGISTER = 0X24;
+    const ADC4_REGISTER = 0X26;
+    const LEFT_LED_REGISTER = 0X0B;
+    const RIGHT_LED_REGISTER = 0X0C;
+    const LEFT_MOTOR_REGISTER = 0X00;
+    const RIGHT_MOTOR_REGISTER = 0X02;
+    const LINE_STATE_REGISTER = 0X1D;
+    const VERSION_CNT_REGISTER = 0X32;
+    const VERSION_DATA_REGISTER = 0X33;
+
+    let _brightness = 255
+
+    let neopixel_buf = pins.createBuffer(16 * 3);
+    for (let i = 0; i < 16 * 3; i++) {
+        neopixel_buf[i] = 0
+    }
+
+    // LED Sensor @end
+
     // 添加辅助函数
     function constrain(value: number, min: number, max: number): number {
         return Math.max(min, Math.min(max, value));
@@ -610,58 +652,6 @@ namespace MicroCar {
 
 
     // Microbit Car  @start
-    export enum RGBLights {
-        //% blockId="Right_RGB" block="Right"
-        RGB_R = 1,
-        //% blockId="Left_RGB" block="Left"
-        RGB_L = 2,
-        //% blockId="ALL" block="ALL"
-        ALL = 3
-    }
-
-    //% blockId=colorLight block="Set LED %light color $color"
-    //% color.shadow="colorNumberPicker"
-    //% weight=65
-    //% group="Microbit Car"
-    export function colorLight(light: RGBLights, color: number): void {
-        let r: number, g: number, b: number;
-        r = (color >> 16) & 0xFF; // 提取红色分量
-        g = (color >> 8) & 0xFF;  // 提取绿色分量
-        b = color & 0xFF;         // 提取蓝色分量
-        singleheadlights(light, r, g, b); // 调用底层函数设置灯光颜色
-    }
-
-
-    //% inlineInputMode=inline
-    //% blockId=singleheadlights block="Set %light lamp color R:%r G:%g B:%b"
-    //% r.min=0 r.max=255
-    //% g.min=0 g.max=255
-    //% b.min=0 b.max=255
-    //% weight=60
-    //% group="Microbit Car"
-    export function singleheadlights(light: RGBLights, r: number, g: number, b: number): void {
-        let buf = pins.createBuffer(5);
-
-        buf[0] = 0x00;
-        buf[2] = r;
-        buf[3] = g;
-        buf[4] = b;
-
-        if (light == 1) {
-            buf[1] = 0x03;
-            pins.i2cWriteBuffer(0x18, buf);
-            basic.pause(10);
-        }
-        else if (light == 2) {
-            buf[1] = 0x04;
-            pins.i2cWriteBuffer(0x18, buf);
-            basic.pause(10);
-        }
-        else if (light == 3) {
-            buf[1] = 0x05;
-            pins.i2cWriteBuffer(0x18, buf);
-        }
-    }
 
     export enum Direction {
         //% block="Forward" enumval=0
@@ -831,90 +821,57 @@ namespace MicroCar {
         }
     }
 
+    /**
+ * Control left and right LED light switch module
+ * @param eled LED lamp selection
+ * @param eSwitch Control LED light on or off
+ */
+
+    //% block="control %eled %eSwitch"
+    //% weight=97
+    export function controlLED(eled: MyEnumLed, eSwitch: MyEnumSwitch): void {
+        switch (eled) {
+            case MyEnumLed.LeftLed:
+                let leftLedControlBuffer = pins.createBuffer(2);
+                leftLedControlBuffer[0] = LEFT_LED_REGISTER;
+                leftLedControlBuffer[1] = eSwitch;
+                pins.i2cWriteBuffer(I2CADDR, leftLedControlBuffer);
+                break;
+            case MyEnumLed.RightLed:
+                let rightLedControlBuffer = pins.createBuffer(2);
+                rightLedControlBuffer[0] = RIGHT_LED_REGISTER;
+                rightLedControlBuffer[1] = eSwitch;
+                pins.i2cWriteBuffer(I2CADDR, rightLedControlBuffer);
+                break;
+            default:
+                let allLedControlBuffer = pins.createBuffer(3);
+                allLedControlBuffer[0] = LEFT_LED_REGISTER;
+                allLedControlBuffer[1] = eSwitch;
+                allLedControlBuffer[2] = eSwitch;
+                pins.i2cWriteBuffer(I2CADDR, allLedControlBuffer);
+                break;
+        }
+    }
+
+    /**
+ * Turn off all RGB LEDs
+ * eg: DigitalPin.P15
+ * 
+ * @param pin, pin to control the leds
+ */
+
+    /**
+     * Set the brightness of RGB LED
+     * @param brightness  , eg: 100
+     */
+
+    //% weight=70
+    //% brightness.min=0 brightness.max=255
+    //% block="set RGB brightness to |%brightness"
+    export function setBrightness(brightness: number) {
+        _brightness = brightness;
+    }
+    
     // Microbit Car  @end
-
-
-    // Microbit controller  @start
-
-    export enum Rocker {
-        //% block="X" enumval=0
-        x,
-        //% block="Y" enumval=1
-        y,
-        //% block="Key" enumval=2
-        key,
-    }
-
-
-    //% blockId=joystick block="Read joystick value %dir "
-    //% group="Microbit controller"
-    export function joystick(dir: Rocker): number | boolean {
-        switch (dir) {
-            case Rocker.x:
-                return pins.analogReadPin(AnalogPin.P1); // 读取摇杆 X 值
-            case Rocker.y:
-                return pins.analogReadPin(AnalogPin.P2); // 读取摇杆 Y 值
-            case Rocker.key:
-                pins.setPull(DigitalPin.P8, PinPullMode.PullUp); // 设置按键引脚为上拉模式
-                return pins.digitalReadPin(DigitalPin.P8) === 0; // 读取按键状态，返回布尔值
-            default:
-                return false; // 如果传入无效的方向，返回 false
-        }
-    }
-
-    export enum Four_key {
-        //% block="Up" enumval=0
-        up,
-        //% block="Down" enumval=1
-        down,
-        //% block="Left" enumval=2
-        left,
-        //% block="Right" enumval=3
-        right
-    }
-
-    //% blockId=Four_bit_key block="Read the %dir key"
-    //% group="Microbit controller"
-    export function Four_bit_key(dir: Four_key): boolean {
-        // 设置引脚的上拉电阻
-        pins.setPull(DigitalPin.P13, PinPullMode.PullUp)
-        pins.setPull(DigitalPin.P14, PinPullMode.PullUp)
-        pins.setPull(DigitalPin.P15, PinPullMode.PullUp)
-        pins.setPull(DigitalPin.P16, PinPullMode.PullUp)
-
-        // 根据方向读取对应的按键状态
-        switch (dir) {
-            case Four_key.up:
-                return pins.digitalReadPin(DigitalPin.P16) === 0;
-            case Four_key.down:
-                return pins.digitalReadPin(DigitalPin.P14) === 0;
-            case Four_key.left:
-                return pins.digitalReadPin(DigitalPin.P13) === 0;
-            case Four_key.right:
-                return pins.digitalReadPin(DigitalPin.P15) === 0;
-            default:
-                return false; // 如果传入无效的方向，返回 false
-        }
-    }
-
-
-    export enum Vibration_motor_condition {
-        //% block="ON" enumval=0
-        on,
-        //% block="OFF" enumval=1
-        off,
-    }
-
-    // 控制震动电机
-    //% blockId=Vibrating_machine block="Vibrating machine %condition"
-    //% group="Microbit controller"
-    export function Vibrating_machine(condition: Vibration_motor_condition): void {
-        if (condition === Vibration_motor_condition.on) {
-            pins.digitalWritePin(DigitalPin.P12, 1); // 打开震动电机
-        } else {
-            pins.digitalWritePin(DigitalPin.P12, 0); // 关闭震动电机
-        }
-    }
-    // Microbit controller  @end
 
 }
