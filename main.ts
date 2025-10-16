@@ -556,49 +556,6 @@ namespace MicroCar {
         }
     }
 
-    // LED Sensor @start
-
-    //LED light selection enumeration
-    export enum MyEnumLed {
-        //% block="left led light"
-        LeftLed,
-        //% block="right led light"
-        RightLed,
-        //% block="all led light"
-        AllLed,
-    };
-
-    //LED light switch enumeration selection
-    export enum MyEnumSwitch {
-        //% block="close"
-        Close,
-        //% block="open"
-        Open,
-    };
-
-    const I2CADDR = 0x10;
-    const ADC0_REGISTER = 0X1E;
-    const ADC1_REGISTER = 0X20;
-    const ADC2_REGISTER = 0X22;
-    const ADC3_REGISTER = 0X24;
-    const ADC4_REGISTER = 0X26;
-    const LEFT_LED_REGISTER = 0X0B;
-    const RIGHT_LED_REGISTER = 0X0C;
-    const LEFT_MOTOR_REGISTER = 0X00;
-    const RIGHT_MOTOR_REGISTER = 0X02;
-    const LINE_STATE_REGISTER = 0X1D;
-    const VERSION_CNT_REGISTER = 0X32;
-    const VERSION_DATA_REGISTER = 0X33;
-
-    let _brightness = 255
-
-    let neopixel_buf = pins.createBuffer(16 * 3);
-    for (let i = 0; i < 16 * 3; i++) {
-        neopixel_buf[i] = 0
-    }
-
-    // LED Sensor @end
-
     // 添加辅助函数
     function constrain(value: number, min: number, max: number): number {
         return Math.max(min, Math.min(max, value));
@@ -684,6 +641,7 @@ namespace MicroCar {
     //% rspeed.min=-100 rspeed.max=100
     //% weight=100
     //% group="Microbit Car"
+    
     export function motors(lspeed: number = 0, rspeed: number = 0): void {
         let buf = pins.createBuffer(4);
 
@@ -692,49 +650,48 @@ namespace MicroCar {
         rspeed = Math.constrain(rspeed, -100, 100);
 
         // 左轮控制
-        if (lspeed === 0) {
+        if (lspeed == 0) {
             // 单独停止左轮
-            buf[0] = 0x00;
-            buf[1] = 0x01;  // 左轮
-            buf[2] = 0x00;  // 停止
+            buf[0] = 0;
+            buf[1] = 1;  // 左轮
+            buf[2] = 0;  // 停止
             buf[3] = 0;     // 速度为0
             pins.i2cWriteBuffer(0x18, buf);
         }
         else if (lspeed > 0) {
-            buf[0] = 0x00;
-            buf[1] = 0x01;  // 左轮
-            buf[2] = 0x02;  // 向前
+            buf[0] = 0;
+            buf[1] = 1;  // 左轮
+            buf[2] = 1;  // 向前
             buf[3] = lspeed;
             pins.i2cWriteBuffer(0x18, buf);
         }
-        else { // lspeed < 0
-            buf[0] = 0x00;
-            buf[1] = 0x01;  // 左轮
-            buf[2] = 0x01;  // 向后
-            buf[3] = -lspeed; // 取绝对值（~lspeed + 1 也可以，但 -lspeed 更直观）
+        else if (lspeed < 0){ // lspeed < 0
+            buf[0] = 0;
+            buf[1] = 2;  // 左轮
+            buf[2] = 2;  // 向后
+            buf[3] = -lspeed; // 取绝对值
             pins.i2cWriteBuffer(0x18, buf);
         }
-
         // 右轮控制
-        if (rspeed === 0) {
+        if (rspeed == 0) {
             // 单独停止右轮
-            buf[0] = 0x00;
-            buf[1] = 0x02;  // 右轮
-            buf[2] = 0x00;  // 停止
+            buf[0] = 0;
+            buf[1] = 2;  // 右轮
+            buf[2] = 0;  // 停止
             buf[3] = 0;     // 速度为0
             pins.i2cWriteBuffer(0x18, buf);
         }
         else if (rspeed > 0) {
-            buf[0] = 0x00;
-            buf[1] = 0x02;  // 右轮
-            buf[2] = 0x02;  // 向前
+            buf[0] = 0;
+            buf[1] = 2;  // 右轮
+            buf[2] = 1;  // 向前
             buf[3] = rspeed;
             pins.i2cWriteBuffer(0x18, buf);
         }
-        else { // rspeed < 0
-            buf[0] = 0x00;
-            buf[1] = 0x02;  // 右轮
-            buf[2] = 0x01;  // 向后
+        else if (rspeed < 0){ // rspeed < 0
+            buf[0] = 0;
+            buf[1] = 2;  // 右轮
+            buf[2] = 2;  // 向后
             buf[3] = -rspeed; // 取绝对值
             pins.i2cWriteBuffer(0x18, buf);
         }
@@ -821,57 +778,320 @@ namespace MicroCar {
         }
     }
 
-    /**
- * Control left and right LED light switch module
- * @param eled LED lamp selection
- * @param eSwitch Control LED light on or off
- */
 
-    //% block="control %eled %eSwitch"
-    //% weight=97
-    export function controlLED(eled: MyEnumLed, eSwitch: MyEnumSwitch): void {
-        switch (eled) {
-            case MyEnumLed.LeftLed:
-                let leftLedControlBuffer = pins.createBuffer(2);
-                leftLedControlBuffer[0] = LEFT_LED_REGISTER;
-                leftLedControlBuffer[1] = eSwitch;
-                pins.i2cWriteBuffer(I2CADDR, leftLedControlBuffer);
-                break;
-            case MyEnumLed.RightLed:
-                let rightLedControlBuffer = pins.createBuffer(2);
-                rightLedControlBuffer[0] = RIGHT_LED_REGISTER;
-                rightLedControlBuffer[1] = eSwitch;
-                pins.i2cWriteBuffer(I2CADDR, rightLedControlBuffer);
-                break;
-            default:
-                let allLedControlBuffer = pins.createBuffer(3);
-                allLedControlBuffer[0] = LEFT_LED_REGISTER;
-                allLedControlBuffer[1] = eSwitch;
-                allLedControlBuffer[2] = eSwitch;
-                pins.i2cWriteBuffer(I2CADDR, allLedControlBuffer);
-                break;
-        }
+    // ==================== 枚举定义 ====================
+
+    //LED light selection enumeration
+    export enum MyEnumLed {
+        //% block="Left"
+        Left = 0,
+        //% block="Right" 
+        Right = 1,
+        //% block="all"
+        All = 2,
     }
 
-    /**
- * Turn off all RGB LEDs
- * eg: DigitalPin.P15
- * 
- * @param pin, pin to control the leds
- */
+    //LED light switch enumeration selection
+    export enum MyEnumSwitch {
+        //% block="close"
+        Close = 0,
+        //% block="open"
+        Open = 1,
+    };
+
+    //Line sensor selection
+    export enum MyEnumLineSensor {
+        //% block="L1"
+        SensorL1,
+        //% block="L2"
+        SensorL2,
+        //% block="L3"
+        SensorL3,
+        //% block="L4"
+        SensorL4,
+        //% block="L5"
+        SensorL5,
+    };
 
     /**
-     * Set the brightness of RGB LED
-     * @param brightness  , eg: 100
+     * Well known colors for a NeoPixel strip
      */
+    export enum NeoPixelColors {
+        //% block=red
+        Red = 0xFF0000,
+        //% block=orange
+        Orange = 0xFFA500,
+        //% block=yellow
+        Yellow = 0xFFFF00,
+        //% block=green
+        Green = 0x00FF00,
+        //% block=blue
+        Blue = 0x0000FF,
+        //% block=indigo
+        Indigo = 0x4b0082,
+        //% block=violet
+        Violet = 0x8a2be2,
+        //% block=purple
+        Purple = 0xFF00FF,
+        //% block=white
+        White = 0xFFFFFF,
+        //% block=black
+        Black = 0x000000
+    }
+    const I2CADDR = 0x10;
+    const ADC0_REGISTER = 0X1E;
+    const ADC1_REGISTER = 0X20;
+    const ADC2_REGISTER = 0X22;
+    const ADC3_REGISTER = 0X24;
+    const ADC4_REGISTER = 0X26;
+    const LEFT_LED_REGISTER = 0X0B;
+    const RIGHT_LED_REGISTER = 0X0C;
+    const LEFT_MOTOR_REGISTER = 0X00;
+    const RIGHT_MOTOR_REGISTER = 0X02;
+    const LINE_STATE_REGISTER = 0X1D;
+    const VERSION_CNT_REGISTER = 0X32;
+    const VERSION_DATA_REGISTER = 0X33;
+
+    let _brightness = 255
+
+    let neopixel_buf = pins.createBuffer(16 * 3);
+    for (let i = 0; i < 16 * 3; i++) {
+        neopixel_buf[i] = 0
+    }
+
+    // ==================== 基础LED控制 ====================
+
+    //% block="Set %eled LED%eSwitch"
+    //% weight=97
+    //% group="基础LED控制"
+    export function controlLED(eled: MyEnumLed, eSwitch: MyEnumSwitch): void {
+        let buf = pins.createBuffer(4);
+        buf[0] = 0;
+        buf[1] = 6;
+        buf[2] = eled;
+        buf[3] = eSwitch;
+        pins.i2cWriteBuffer(0x18, buf);
+    }
+
+    // ==================== RGB LED控制 ====================
+
+    //% weight=2 blockGap=8
+    //% blockId="neopixel_colors" block="%color"
+    //% group="RGB LED"
+    export function colors(color: NeoPixelColors): number {
+        return color;
+    }
+
+    //% weight=60
+    //% r.min=0 r.max=255
+    //% g.min=0 g.max=255
+    //% b.min=0 b.max=255
+    //% block="R|%r G|%g B|%b"
+    export function rgb(r: number, g: number, b: number): number {
+        return (r << 16) + (g << 8) + (b);
+    }
+
+    //% weight=60
+    //% from.min=1 from.max=4
+    //% to.min=1 to.max=4
+    //% block="range from |%from with|%to RGB"
+    //% group="RGB LED"
+    export function ledRange(from: number, to: number): number {
+        // 确保from <= to
+        let start = Math.min(from, to);
+        let end = Math.max(from, to);
+
+        return ((start) << 16) + (2 << 8) + (end);
+    }
+
+    //% weight=60
+    //% index.min=0 index.max=4
+    //% color.shadow="colorNumberPicker"
+    //% block="SET LED |%index show color|%color"
+    //% group="RGB LED"
+    export function setIndexColor(index: number, color: number) {
+        const pin = DigitalPin.P15;  // 使用默认引脚15
+
+        // 初始化缓冲区
+        if (!neopixel_buf) {
+            neopixel_buf = pins.createBuffer(16 * 3);
+        }
+
+        let startIndex = 0;
+        let endIndex = 0;
+
+        // 根据index确定控制范围
+        if (index <= 4) {
+            // 处理单个灯或全部灯 (0-4)
+            switch (index) {
+                case 0: // 全部LED
+                    startIndex = 0;
+                    endIndex = 15;
+                    break;
+                case 1: // 第1个灯
+                    startIndex = 0;
+                    endIndex = 0;
+                    break;
+                case 2: // 第2个灯
+                    startIndex = 1;
+                    endIndex = 1;
+                    break;
+                case 3: // 第3个灯
+                    startIndex = 2;
+                    endIndex = 2;
+                    break;
+                case 4: // 第4个灯
+                    startIndex = 3;
+                    endIndex = 3;
+                    break;
+                default: // 理论上不会进入，保持为第一个灯
+                    startIndex = 0;
+                    endIndex = 0;
+                    break;
+            }
+        } else {
+            // 处理ledRange返回的编码值：格式为 ((from) << 16) + (2 << 8) + (to)
+            // 提取起始和结束索引
+            startIndex = (index >> 16) & 0xFFFF; // 获取高16位表示的起始灯
+            endIndex = index & 0xFF;             // 获取低8位表示的结束灯
+            // 可选：进行范围校验，确保索引在0-15之间
+            startIndex = Math.max(0, Math.min(15, startIndex));
+            endIndex = Math.max(0, Math.min(15, endIndex));
+        }
+
+        // 颜色提取 - 适配颜色选择器的返回值
+        let r = (color >> 16) & 0xFF;
+        let g = (color >> 8) & 0xFF;
+        let b = color & 0xFF;
+
+        // 应用亮度控制（如果需要）
+        if (_brightness !== 255) {
+            r = Math.round(r * (_brightness / 255));
+            g = Math.round(g * (_brightness / 255));
+            b = Math.round(b * (_brightness / 255));
+        }
+
+        // 填充指定范围的LED
+        for (let i = startIndex; i <= endIndex; i++) {
+            if (i < 16) {  // 确保不超出缓冲区范围
+                neopixel_buf[i * 3 + 0] = g;  // G
+                neopixel_buf[i * 3 + 1] = r;  // R  
+                neopixel_buf[i * 3 + 2] = b;  // B
+            }
+        }
+
+        // 发送数据到引脚15
+        ws2812b.sendBuffer(neopixel_buf, pin);
+    }
+
+    //% weight=55
+    //% block="Close RGB"
+    //% group="RGB LED"
+    export function Close_RGB() {
+        const pin = DigitalPin.P15;
+
+        // 初始化缓冲区
+        if (!neopixel_buf) {
+            neopixel_buf = pins.createBuffer(16 * 3);
+        }
+
+        // 设置所有LED为黑色（关闭）
+        for (let i = 0; i < 16; i++) {
+            neopixel_buf[i * 3 + 0] = 0;  // G = 0
+            neopixel_buf[i * 3 + 1] = 0;  // R = 0
+            neopixel_buf[i * 3 + 2] = 0;  // B = 0
+        }
+
+        // 发送数据
+        ws2812b.sendBuffer(neopixel_buf, pin);
+    }
 
     //% weight=70
     //% brightness.min=0 brightness.max=255
-    //% block="set RGB brightness to |%brightness"
+    //% block="set RGB luminance |%brightness"
     export function setBrightness(brightness: number) {
         _brightness = brightness;
     }
-    
-    // Microbit Car  @end
+
+
+    // ==================== 巡线传感器 ====================
+
+    //% block="getLineSensorAnalog %index state"
+    //% weight=96
+    //% group="巡线传感器"
+    export function getLineSensorAnalog(index: MyEnumLineSensor): number {
+        let buf = pins.createBuffer(4);
+        buf[0] = 0;
+        buf[1] = 7;
+
+        switch (index) {
+            case MyEnumLineSensor.SensorL1:
+                buf[2] = 1;
+                break;
+            case MyEnumLineSensor.SensorL2:
+                buf[2] = 2;
+                break;
+            case MyEnumLineSensor.SensorL3:
+                buf[2] = 3;
+                break;
+            case MyEnumLineSensor.SensorL4:
+                buf[2] = 4;
+                break;
+            case MyEnumLineSensor.SensorL5:
+                buf[2] = 5;
+                break;
+            default:
+                buf[2] = 0;
+                break;
+        }
+
+        buf[3] = 0;
+        pins.i2cWriteBuffer(0x18, buf);
+
+        let rxbuf = pins.i2cReadBuffer(0x18, 5);
+
+        let res = (rxbuf[3] | (rxbuf[4] << 7)) * 4;
+
+        return res;
+    }
+
+    //% block="getLineSensorDigital %index ADC data"
+    //% weight=95
+    //% group="巡线传感器"
+    export function getLineSensorDigital(index: MyEnumLineSensor): number {
+        let buf = pins.createBuffer(4);
+        buf[0] = 0;
+        buf[1] = 8;
+
+        switch (index) {
+            case MyEnumLineSensor.SensorL1:
+                buf[2] = 1;
+                break;
+            case MyEnumLineSensor.SensorL2:
+                buf[2] = 2;
+                break;
+            case MyEnumLineSensor.SensorL3:
+                buf[2] = 3;
+                break;
+            case MyEnumLineSensor.SensorL4:
+                buf[2] = 4;
+                break;
+            case MyEnumLineSensor.SensorL5:
+                buf[2] = 5;
+                break;
+            default:
+                buf[2] = 0;
+                break;
+        }
+
+        buf[3] = 0;
+        pins.i2cWriteBuffer(0x18, buf);
+
+        let rxbuf = pins.i2cReadBuffer(0x18, 4);
+
+        let res = (rxbuf[3] | (rxbuf[4] << 7)) * 4;
+
+        return res;
+    }    // Microbit Car  @end
 
 }

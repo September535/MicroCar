@@ -13,19 +13,26 @@
     "MicroCar.Direction.forward|block": "前进",
     "MicroCar.Direction.left|block": "左",
     "MicroCar.Direction.right|block": "右",
-
     "MicroCar.Rocker.key|block": "按键",
     "MicroCar.MbPins.Left|block": "左",
     "MicroCar.MbPins.Right|block": "右",
-
     "MicroCar.motors|block": "左轮速度 %lspeed\\% |右路速度 %rspeed\\%",
-
     "MicroCar.moveTime|block": "设置方向 %dir  |速度 %speed\\%",
     "MicroCar.moveTime|param|dir": "设定行驶方向",
     "MicroCar.moveTime|param|speed": "设定行驶速度",
     "MicroCar.tracking|block": "|%pin|循迹读取值",
-
-    
+    "MicroCar.MyEnumLed.Left|block": "左",
+    "MicroCar.MyEnumLed.Right|block": "右",
+    "MicroCar.MyEnumLed.All|block": "全部",
+    "MicroCar.MyEnumSwitch.Close|block": "关闭",
+    "MicroCar.MyEnumSwitch.Open|block": "打开",
+    "MicroCar.controlLED|block": "设置 %eled 灯 %eSwitch",
+    "MicroCar.Close_RGB|block": "熄灭全部RBG",
+    "MicroCar.setBrightness|block": "设置RGB灯亮度 |%brightness",
+    "MicroCar.setIndexColor|block": "设置第|%index 个RGB显示 |%color 颜色",
+    "MicroCar.ledRange|block": "从 |%from 到|%to ",
+    "MicroCar.getLineSensorDigital|block": "获取 %index 循迹数字值",
+    "MicroCar.getLineSensorAnalog|block": "获取 %index 循迹模拟值",
     "{id:category}MicroCar": "MicroCar",
     "{id:group}Ultrasonic Sensor": "超声波",
     "{id:group}IR Receiver": "红外遥控",
