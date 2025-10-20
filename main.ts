@@ -252,7 +252,7 @@ namespace background {
 }
 
 
-//% color="#6e5ba4" weight=20 icon="icon.png"
+//% color="#6e5ba4" weight=20 icon="\uf085"
 namespace MicroCar {
 
     // IR Receiver @startTime
