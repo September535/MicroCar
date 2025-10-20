@@ -641,7 +641,6 @@ namespace MicroCar {
     //% rspeed.min=-100 rspeed.max=100
     //% weight=100
     //% group="Microbit Car"
-    
     export function motors(lspeed: number = 0, rspeed: number = 0): void {
         let buf = pins.createBuffer(4);
 
@@ -653,46 +652,47 @@ namespace MicroCar {
         if (lspeed == 0) {
             // 单独停止左轮
             buf[0] = 0;
-            buf[1] = 1;  // 左轮
+            buf[1] = 1;  // 左轮地址
             buf[2] = 0;  // 停止
-            buf[3] = 0;     // 速度为0
+            buf[3] = 0;  // 速度为0
             pins.i2cWriteBuffer(0x18, buf);
         }
         else if (lspeed > 0) {
             buf[0] = 0;
-            buf[1] = 1;  // 左轮
+            buf[1] = 1;  // 左轮地址
             buf[2] = 1;  // 向前
-            buf[3] = lspeed;
+            buf[3] = -lspeed;
             pins.i2cWriteBuffer(0x18, buf);
         }
-        else if (lspeed < 0){ // lspeed < 0
+        else { // lspeed < 0
             buf[0] = 0;
-            buf[1] = 2;  // 左轮
+            buf[1] = 1;  // 左轮地址 - 这里原来是2，应该是1
             buf[2] = 2;  // 向后
-            buf[3] = -lspeed; // 取绝对值
+            buf[3] = lspeed; // 取绝对值
             pins.i2cWriteBuffer(0x18, buf);
         }
+
         // 右轮控制
         if (rspeed == 0) {
             // 单独停止右轮
             buf[0] = 0;
-            buf[1] = 2;  // 右轮
+            buf[1] = 2;  // 右轮地址
             buf[2] = 0;  // 停止
-            buf[3] = 0;     // 速度为0
+            buf[3] = 0;  // 速度为0
             pins.i2cWriteBuffer(0x18, buf);
         }
         else if (rspeed > 0) {
             buf[0] = 0;
-            buf[1] = 2;  // 右轮
+            buf[1] = 2;  // 右轮地址
             buf[2] = 1;  // 向前
-            buf[3] = rspeed;
+            buf[3] = -rspeed;
             pins.i2cWriteBuffer(0x18, buf);
         }
-        else if (rspeed < 0){ // rspeed < 0
+        else { // rspeed < 0
             buf[0] = 0;
-            buf[1] = 2;  // 右轮
+            buf[1] = 2;  // 右轮地址
             buf[2] = 2;  // 向后
-            buf[3] = -rspeed; // 取绝对值
+            buf[3] = rspeed; // 取绝对值
             pins.i2cWriteBuffer(0x18, buf);
         }
     }
@@ -749,35 +749,6 @@ namespace MicroCar {
         }
 
     }
-
-    export enum MbPins {
-        //% block="Left" 
-        Left = 0,
-        //% block="Right" 
-        Right = 1
-    }
-
-    //% blockId=tracking block="%pin tracking value"
-    //% group="Microbit Car"
-    //% weight=45
-    export function tracking(side: MbPins): number {
-        pins.setPull(AnalogPin.P0, PinPullMode.PullUp);
-        pins.setPull(AnalogPin.P1, PinPullMode.PullUp);
-
-        let left_tracking = pins.analogReadPin(AnalogPin.P1);
-        let right_tracking = pins.analogReadPin(AnalogPin.P0);
-
-        if (side == MbPins.Left) {
-            return left_tracking;
-        }
-        else if (side == MbPins.Right) {
-            return right_tracking;
-        }
-        else {
-            return 0;
-        }
-    }
-
 
     // ==================== 枚举定义 ====================
 
@@ -863,7 +834,7 @@ namespace MicroCar {
 
     //% block="Set %eled LED%eSwitch"
     //% weight=97
-    //% group="基础LED控制"
+    //% group="LED control"
     export function controlLED(eled: MyEnumLed, eSwitch: MyEnumSwitch): void {
         let buf = pins.createBuffer(4);
         buf[0] = 0;
@@ -1018,7 +989,7 @@ namespace MicroCar {
 
     //% block="getLineSensorAnalog %index state"
     //% weight=96
-    //% group="巡线传感器"
+    //% group="Line inspection sensor"
     export function getLineSensorAnalog(index: MyEnumLineSensor): number {
         let buf = pins.createBuffer(4);
         buf[0] = 0;
@@ -1057,7 +1028,7 @@ namespace MicroCar {
 
     //% block="getLineSensorDigital %index ADC data"
     //% weight=95
-    //% group="巡线传感器"
+    //% group="Line inspection sensor"
     export function getLineSensorDigital(index: MyEnumLineSensor): number {
         let buf = pins.createBuffer(4);
         buf[0] = 0;
